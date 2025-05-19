@@ -24,7 +24,23 @@ fn prefix_sum_simple[
 ):
     global_i = block_dim.x * block_idx.x + thread_idx.x
     local_i = thread_idx.x
-    # FILL ME IN (roughly 12 lines)
+    shared_a = tb[dtype]().row_major[SIZE]().shared().alloc()
+    buffer = tb[dtype]().row_major[SIZE]().shared().alloc()
+
+    if local_i < SIZE:
+        shared_a[local_i] = a[local_i]
+
+    barrier()
+
+    if local_i < SIZE:
+        var sum:out.element_type =0
+        for i in range(local_i+1):
+            sum += shared_a[i]
+        buffer[local_i]=sum
+    barrier()
+    if local_i < SIZE:
+        out[local_i]=buffer[local_i]
+
 
 
 # ANCHOR_END: prefix_sum_simple
